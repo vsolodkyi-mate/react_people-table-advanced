@@ -1,48 +1,22 @@
-import React from 'react';
-import cn from 'classnames';
-import { Person } from '../types';
-import { SearchLink } from './SearchLink';
-import PersonLink from './PersonLink';
+import { Person } from '../types/Person';
+import { PersonLink } from '../components/PersonLink';
 
 type Props = {
   people: Person[];
-  selectedSlug: string;
+  selectedSlug?: string;
   sort: string;
   order: string;
+  onSortChange: (field: string) => void;
 };
 
-type SortKey = 'name' | 'sex' | 'born' | 'died';
-
-const PeopleTable: React.FC<Props> = ({
+/* eslint-disable jsx-a11y/control-has-associated-label */
+export const PeopleTable: React.FC<Props> = ({
   people,
   selectedSlug,
   sort,
   order,
+  onSortChange,
 }) => {
-  const getSortParams = (key: SortKey) => {
-    if (sort !== key) {
-      return { sort: key, order: null };
-    }
-
-    if (order === 'asc') {
-      return { sort: key, order: 'desc' };
-    }
-
-    return { sort: null, order: null };
-  };
-
-  const getIconClass = (key: SortKey) => {
-    if (sort !== key) {
-      return 'fa-sort';
-    }
-
-    if (order === 'asc') {
-      return 'fa-sort-up';
-    }
-
-    return 'fa-sort-down';
-  };
-
   return (
     <table
       data-cy="peopleTable"
@@ -50,47 +24,71 @@ const PeopleTable: React.FC<Props> = ({
     >
       <thead>
         <tr>
-          <th>
+          <th onClick={() => onSortChange('name')}>
             <span className="is-flex is-flex-wrap-nowrap">
               Name
-              <SearchLink params={getSortParams('name')}>
+              <a>
                 <span className="icon">
-                  <i className={cn('fas', getIconClass('name'))} />
+                  {sort !== 'name' && <i className="fas fa-sort" />}
+                  {sort === 'name' && order !== 'desc' && (
+                    <i className="fas fa-sort-up" />
+                  )}
+                  {sort === 'name' && order === 'desc' && (
+                    <i className="fas fa-sort-down" />
+                  )}
                 </span>
-              </SearchLink>
+              </a>
             </span>
           </th>
 
-          <th>
+          <th onClick={() => onSortChange('sex')}>
             <span className="is-flex is-flex-wrap-nowrap">
               Sex
-              <SearchLink params={getSortParams('sex')}>
+              <a>
                 <span className="icon">
-                  <i className={cn('fas', getIconClass('sex'))} />
+                  {sort !== 'sex' && <i className="fas fa-sort" />}
+                  {sort === 'sex' && order !== 'desc' && (
+                    <i className="fas fa-sort-up" />
+                  )}
+                  {sort === 'sex' && order === 'desc' && (
+                    <i className="fas fa-sort-down" />
+                  )}
                 </span>
-              </SearchLink>
+              </a>
             </span>
           </th>
 
-          <th>
+          <th onClick={() => onSortChange('born')}>
             <span className="is-flex is-flex-wrap-nowrap">
               Born
-              <SearchLink params={getSortParams('born')}>
+              <a>
                 <span className="icon">
-                  <i className={cn('fas', getIconClass('born'))} />
+                  {sort !== 'born' && <i className="fas fa-sort" />}
+                  {sort === 'born' && order !== 'desc' && (
+                    <i className="fas fa-sort-up" />
+                  )}
+                  {sort === 'born' && order === 'desc' && (
+                    <i className="fas fa-sort-down" />
+                  )}
                 </span>
-              </SearchLink>
+              </a>
             </span>
           </th>
 
-          <th>
+          <th onClick={() => onSortChange('died')}>
             <span className="is-flex is-flex-wrap-nowrap">
               Died
-              <SearchLink params={getSortParams('died')}>
+              <a>
                 <span className="icon">
-                  <i className={cn('fas', getIconClass('died'))} />
+                  {sort !== 'died' && <i className="fas fa-sort" />}
+                  {sort === 'died' && order !== 'desc' && (
+                    <i className="fas fa-sort-up" />
+                  )}
+                  {sort === 'died' && order === 'desc' && (
+                    <i className="fas fa-sort-down" />
+                  )}
                 </span>
-              </SearchLink>
+              </a>
             </span>
           </th>
 
@@ -100,32 +98,47 @@ const PeopleTable: React.FC<Props> = ({
       </thead>
 
       <tbody>
-        {people.map(person => (
-          <tr
-            key={person.slug}
-            data-cy="person"
-            className={cn({
-              'has-background-warning': person.slug === selectedSlug,
-            })}
-          >
-            <td>
-              <PersonLink name={person.name} people={people} />
-            </td>
+        {people.map(person => {
+          const motherPerson =
+            people.find(p => p.name === person.motherName) ?? null;
+          const fatherPerson =
+            people.find(p => p.name === person.fatherName) ?? null;
 
-            <td>{person.sex}</td>
-            <td>{person.born}</td>
-            <td>{person.died}</td>
-            <td>
-              <PersonLink name={person.motherName} people={people} />
-            </td>
-            <td>
-              <PersonLink name={person.fatherName} people={people} />
-            </td>
-          </tr>
-        ))}
+          return (
+            <tr
+              key={person.slug}
+              data-cy="person"
+              className={
+                person.slug === selectedSlug ? 'has-background-warning' : ''
+              }
+            >
+              <td>
+                <PersonLink person={person} />
+              </td>
+
+              <td>{person.sex}</td>
+              <td>{person.born}</td>
+              <td>{person.died}</td>
+
+              <td>
+                {motherPerson ? (
+                  <PersonLink person={motherPerson} />
+                ) : (
+                  person.motherName || '-'
+                )}
+              </td>
+
+              <td>
+                {fatherPerson ? (
+                  <PersonLink person={fatherPerson} />
+                ) : (
+                  person.fatherName || '-'
+                )}
+              </td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );
 };
-
-export default PeopleTable;

@@ -1,8 +1,11 @@
 import { NavLink, useLocation } from 'react-router-dom';
 
-const Navbar = () => {
+export const Navbar = () => {
   const location = useLocation();
-  const isOnPeople = location.pathname.startsWith('/people');
+
+  const peopleLink = location.pathname.startsWith('/people')
+    ? `/people${location.search}`
+    : '/people';
 
   return (
     <nav
@@ -14,22 +17,20 @@ const Navbar = () => {
       <div className="container">
         <div className="navbar-brand">
           <NavLink
-            className={({ isActive }) =>
-              'navbar-item' + (isActive ? ' has-background-grey-lighter' : '')
-            }
             to="/"
+            end
+            className={({ isActive }) =>
+              `navbar-item ${isActive ? 'has-background-grey-lighter' : ''}`
+            }
           >
             Home
           </NavLink>
 
           <NavLink
+            to={peopleLink}
             className={({ isActive }) =>
-              'navbar-item' + (isActive ? ' has-background-grey-lighter' : '')
+              `navbar-item ${isActive ? 'has-background-grey-lighter' : ''}`
             }
-            to={{
-              pathname: '/people',
-              search: isOnPeople ? location.search : '',
-            }}
           >
             People
           </NavLink>
@@ -38,5 +39,3 @@ const Navbar = () => {
     </nav>
   );
 };
-
-export default Navbar;

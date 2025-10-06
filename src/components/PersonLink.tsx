@@ -1,30 +1,23 @@
-import React from 'react';
-import { Person } from '../types';
 import { Link, useLocation } from 'react-router-dom';
+import { Person } from '../types/Person';
 
 type Props = {
-  name: string | null;
-  people: Person[];
+  person: Person | null;
 };
 
-const PersonLink: React.FC<Props> = ({ name, people }) => {
-  const { search } = useLocation();
-  const personFound = people.find(person => name === person.name);
+export const PersonLink: React.FC<Props> = ({ person }) => {
+  const location = useLocation();
+
+  if (!person) {
+    return <>-</>;
+  }
 
   return (
-    <>
-      {personFound ? (
-        <Link
-          className={personFound.sex === 'f' ? 'has-text-danger' : ''}
-          to={{ pathname: `/people/${personFound.slug}`, search }}
-        >
-          {personFound.name}
-        </Link>
-      ) : (
-        name || '-'
-      )}
-    </>
+    <Link
+      to={`/people/${person.slug}${location.search}`}
+      className={person.sex === 'f' ? 'has-text-danger' : ''}
+    >
+      {person.name}
+    </Link>
   );
 };
-
-export default PersonLink;

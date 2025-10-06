@@ -1,40 +1,75 @@
-import { SearchLink } from './SearchLink';
+import { useSearchParams } from 'react-router-dom';
 
-const CENTURIES = ['16', '17', '18', '19', '20'];
+export const PeopleFilters = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const query = searchParams.get('query') || '';
+  const centuries = searchParams.getAll('centuries') || [];
+  const sex = searchParams.get('sex') || '';
 
-type Props = {
-  query: string;
-  onQueryChange: (newQuery: string) => void;
-  sex: string | null;
-  centuries: string[];
-};
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
 
-export const PeopleFilters: React.FC<Props> = ({
-  query,
-  onQueryChange,
-  sex,
-  centuries,
-}) => {
+    if (value) {
+      searchParams.set('query', value);
+    } else {
+      searchParams.delete('query');
+    }
+
+    setSearchParams(searchParams);
+  };
+
+  function toggleCentury(ch: string) {
+    const params = new URLSearchParams(searchParams);
+    const currentCenturies = params.getAll('centuries');
+    const newCenturies = currentCenturies.includes(ch)
+      ? currentCenturies.filter(century => century !== ch)
+      : [...currentCenturies, ch];
+
+    params.delete('centuries');
+    newCenturies.forEach(century => params.append('centuries', century));
+    setSearchParams(params);
+  }
+
   return (
     <nav className="panel">
       <p className="panel-heading">Filters</p>
 
       <p className="panel-tabs" data-cy="SexFilter">
-        <SearchLink params={{ sex: null }} className={!sex ? 'is-active' : ''}>
+        <a
+          className={`${!sex ? 'is-active' : ''}`}
+          onClick={() => {
+            const params = new URLSearchParams(searchParams);
+
+            params.delete('sex');
+            setSearchParams(params);
+          }}
+        >
           All
-        </SearchLink>
-        <SearchLink
-          params={{ sex: 'm' }}
-          className={sex === 'm' ? 'is-active' : ''}
+        </a>
+
+        <a
+          className={`${sex === 'm' ? 'is-active' : ''}`}
+          onClick={() => {
+            const params = new URLSearchParams(searchParams);
+
+            params.set('sex', 'm');
+            setSearchParams(params);
+          }}
         >
           Male
-        </SearchLink>
-        <SearchLink
-          params={{ sex: 'f' }}
-          className={sex === 'f' ? 'is-active' : ''}
+        </a>
+
+        <a
+          className={`${sex === 'f' ? 'is-active' : ''}`}
+          onClick={() => {
+            const params = new URLSearchParams(searchParams);
+
+            params.set('sex', 'f');
+            setSearchParams(params);
+          }}
         >
           Female
-        </SearchLink>
+        </a>
       </p>
 
       <div className="panel-block">
@@ -42,10 +77,10 @@ export const PeopleFilters: React.FC<Props> = ({
           <input
             data-cy="NameFilter"
             type="search"
+            value={query}
+            onChange={handleChange}
             className="input"
             placeholder="Search"
-            value={query}
-            onChange={e => onQueryChange(e.target.value)}
           />
 
           <span className="icon is-left">
@@ -57,47 +92,75 @@ export const PeopleFilters: React.FC<Props> = ({
       <div className="panel-block">
         <div className="level is-flex-grow-1 is-mobile" data-cy="CenturyFilter">
           <div className="level-left">
-            {CENTURIES.map(century => {
-              const newCenturies = centuries.includes(century)
-                ? centuries.filter(c => c !== century)
-                : [...centuries, century];
+            <a
+              data-cy="century"
+              className={`button mr-1 ${centuries.includes('16') ? 'is-info' : ''}`}
+              onClick={() => toggleCentury('16')}
+            >
+              16
+            </a>
 
-              return (
-                <SearchLink
-                  key={century}
-                  data-cy="century"
-                  params={{
-                    centuries: newCenturies.length > 0 ? newCenturies : null,
-                  }}
-                  className={`${
-                    centuries.includes(century) ? 'is-info' : ''
-                  } button mr-1`}
-                >
-                  {century}
-                </SearchLink>
-              );
-            })}
+            <a
+              data-cy="century"
+              className={`button mr-1 ${centuries.includes('17') ? 'is-info' : ''}`}
+              onClick={() => toggleCentury('17')}
+            >
+              17
+            </a>
+
+            <a
+              data-cy="century"
+              className={`button mr-1 ${centuries.includes('18') ? 'is-info' : ''}`}
+              onClick={() => toggleCentury('18')}
+            >
+              18
+            </a>
+
+            <a
+              data-cy="century"
+              className={`button mr-1 ${centuries.includes('19') ? 'is-info' : ''}`}
+              onClick={() => toggleCentury('19')}
+            >
+              19
+            </a>
+
+            <a
+              data-cy="century"
+              className={`button mr-1 ${centuries.includes('20') ? 'is-info' : ''}`}
+              onClick={() => toggleCentury('20')}
+            >
+              20
+            </a>
           </div>
 
           <div className="level-right ml-4">
-            <SearchLink
+            <a
               data-cy="centuryALL"
-              className="button is-success is-outlined"
-              params={{ centuries: null }}
+              className={`button ${centuries.length === 0 ? 'is-success is-active' : 'is-outlined'}`}
+              onClick={() => {
+                const params = new URLSearchParams(searchParams);
+
+                params.delete('centuries');
+                setSearchParams(params);
+              }}
             >
               All
-            </SearchLink>
+            </a>
           </div>
         </div>
       </div>
 
       <div className="panel-block">
-        <SearchLink
+        <a
           className="button is-link is-outlined is-fullwidth"
-          params={{ query: null, sex: null, centuries: null }}
+          onClick={() => {
+            const params = new URLSearchParams();
+
+            setSearchParams(params);
+          }}
         >
           Reset all filters
-        </SearchLink>
+        </a>
       </div>
     </nav>
   );

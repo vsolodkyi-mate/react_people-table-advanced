@@ -1,79 +1,82 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Loader } from '../Loader';
-import { Person } from '../../types';
-import { getPeople } from '../../api';
-import PeopleTable from '../PeopleTable';
-import { useParams, useSearchParams } from 'react-router-dom';
 import { PeopleFilters } from '../PeopleFilters';
-import { getSearchWith } from '../../utils/searchHelper';
+import { useEffect, useState } from 'react';
+import { Loader } from '../Loader';
+import { getPeople } from '../../api';
+import { Person } from '../../types/Person';
+import { useParams } from 'react-router-dom';
+import { PeopleTable } from '../PeopleTable';
+import { useSearchParams } from 'react-router-dom';
 
-const PeoplePage: React.FC = () => {
+export const PeoplePage = () => {
   const [people, setPeople] = useState<Person[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const { slug } = useParams<{ slug: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
-
-  const query = searchParams.get('query') || '';
+  const centuries = searchParams.getAll('centuries').map(Number);
   const sex = searchParams.get('sex') || '';
-  const centuries = searchParams.getAll('centuries');
   const sort = searchParams.get('sort') || '';
-  const order = searchParams.get('order') || 'asc';
+  const order = searchParams.get('order') || '';
 
   useEffect(() => {
-    setLoading(true);
     getPeople()
       .then(setPeople)
-      .catch(() => {
-        setError('Unable to load the data');
-      })
+      .catch(() => setError(true))
       .finally(() => {
-        setLoading(false);
+        setIsLoading(false);
       });
   }, []);
 
-  const handleQueryChange = (newQuery: string) => {
-    const params = getSearchWith(searchParams, { query: newQuery || null });
+  const query = searchParams.get('query')?.toLowerCase() || '';
+
+  const filteredPeople = people.filter(person => {
+    const name = person.name.toLowerCase();
+    const mother = person.motherName?.toLowerCase() || '';
+    const father = person.fatherName?.toLowerCase() || '';
+    const matchesQuery =
+      name.includes(query) || mother.includes(query) || father.includes(query);
+
+    const personCentury = Math.floor((person.born - 1) / 100) + 1;
+    const matchesCentury =
+      centuries.length === 0 || centuries.includes(personCentury);
+
+    const matchesSex = !sex || person.sex === sex;
+
+    return matchesQuery && matchesCentury && matchesSex;
+  });
+
+  const handleSortChange = (field: string) => {
+    const params = new URLSearchParams(searchParams);
+
+    if (sort !== field) {
+      params.set('sort', field);
+      params.delete('order');
+    } else if (order != 'desc') {
+      params.set('sort', field);
+      params.set('order', 'desc');
+    } else {
+      params.delete('sort');
+      params.delete('order');
+    }
 
     setSearchParams(params);
   };
 
-  const { slug } = useParams<{ slug: string }>();
+  const sortedPeople = [...filteredPeople];
 
-  const visiblePeople = useMemo(() => {
-    const filteredPeople = people.filter(person => {
-      const nameMatch = person.name.toLowerCase().includes(query.toLowerCase());
-      const sexMatch = !sex || person.sex === sex;
-      const personCentury = String(Math.ceil(person.born / 100));
-      const centuryMatch =
-        !centuries.length || centuries.includes(personCentury);
+  if (sort) {
+    sortedPeople.sort((a, b) => {
+      let result = 0;
 
-      return nameMatch && sexMatch && centuryMatch;
-    });
-
-    if (!sort) {
-      return filteredPeople;
-    }
-
-    return [...filteredPeople].sort((personA, personB) => {
-      const key = sort as keyof Person;
-
-      const valueA = personA[key];
-      const valueB = personB[key];
-
-      if (typeof valueA === 'number' && typeof valueB === 'number') {
-        return order === 'asc' ? valueA - valueB : valueB - valueA;
+      if (sort === 'name' || sort === 'sex') {
+        result = a[sort].localeCompare(b[sort]);
+      } else if (sort === 'born' || sort === 'died') {
+        result = (a[sort] || 0) - (b[sort] || 0);
       }
 
-      if (typeof valueA === 'string' && typeof valueB === 'string') {
-        return order === 'asc'
-          ? valueA.localeCompare(valueB)
-          : valueB.localeCompare(valueA);
-      }
-
-      return 0;
+      return order === 'desc' ? -result : result;
     });
-  }, [people, query, sex, centuries, sort, order]);
+  }
 
   return (
     <>
@@ -81,39 +84,31 @@ const PeoplePage: React.FC = () => {
 
       <div className="block">
         <div className="columns is-desktop is-flex-direction-row-reverse">
-          {!loading && !error && people.length > 0 && (
+          {!isLoading && !error && people.length > 0 && (
             <div className="column is-7-tablet is-narrow-desktop">
-              <PeopleFilters
-                query={query}
-                onQueryChange={handleQueryChange}
-                sex={sex}
-                centuries={centuries}
-              />
+              <PeopleFilters />
             </div>
           )}
 
           <div className="column">
             <div className="box table-container">
-              {loading && <Loader />}
-
-              {error && (
+              {isLoading ? (
+                <Loader />
+              ) : error ? (
                 <p data-cy="peopleLoadingError" className="has-text-danger">
                   Something went wrong
                 </p>
-              )}
-
-              {!loading && !error && people.length === 0 && (
+              ) : filteredPeople.length === 0 ? (
                 <p data-cy="noPeopleMessage">
                   There are no people on the server
                 </p>
-              )}
-
-              {!loading && !error && people.length > 0 && (
+              ) : (
                 <PeopleTable
-                  people={visiblePeople}
-                  selectedSlug={slug || ''}
-                  order={order}
+                  people={sortedPeople}
+                  selectedSlug={slug}
                   sort={sort}
+                  order={order}
+                  onSortChange={handleSortChange}
                 />
               )}
             </div>
@@ -123,5 +118,3 @@ const PeoplePage: React.FC = () => {
     </>
   );
 };
-
-export default PeoplePage;

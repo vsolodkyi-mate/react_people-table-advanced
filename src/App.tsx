@@ -1,38 +1,31 @@
+import { PeoplePage } from './components/pages/PeoplePage';
+import { Navbar } from './components/Navbar';
+
 import './App.scss';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import HomePage from './components/pages/HomePage';
-import PeoplePage from './components/pages/PeoplePage';
-import NotFoundPage from './components/pages/NotFoundPage';
-import { useEffect } from 'react';
-import Navbar from './components/Navbar';
+import { Navigate, Route, Routes } from 'react-router-dom';
 
 export const App = () => {
-  useEffect(() => {
-    const htmlElement = document.documentElement;
-
-    htmlElement.classList.add('has-navbar-fixed-top');
-
-    return () => {
-      htmlElement.classList.remove('has-navbar-fixed-top');
-    };
-  }, []);
-
   return (
     <div data-cy="app">
       <Navbar />
-      <main className="section">
+
+      <div className="section">
         <div className="container">
           <Routes>
-            <Route path="/" element={<HomePage />} />
             <Route path="/home" element={<Navigate to="/" replace />} />
+            <Route path="/" element={<h1 className="title">Home Page</h1>} />
 
-            <Route path="/people" element={<PeoplePage />} />
-            <Route path="/people/:slug" element={<PeoplePage />} />
+            <Route path="/people/:slug?" element={<PeoplePage />}>
+              <Route index element={<h1 className="title">People Page</h1>} />
+            </Route>
 
-            <Route path="*" element={<NotFoundPage />} />
+            <Route
+              path="*"
+              element={<h1 className="title">Page not found</h1>}
+            />
           </Routes>
         </div>
-      </main>
+      </div>
     </div>
   );
 };
