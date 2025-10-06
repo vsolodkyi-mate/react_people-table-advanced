@@ -1,5 +1,6 @@
+import React from 'react';
 import { Person } from '../types/Person';
-import { PersonLink } from '../components/PersonLink';
+import { PersonLink } from './PersonLink';
 
 type Props = {
   people: Person[];

@@ -1,10 +1,10 @@
-import { PeopleFilters } from '../PeopleFilters';
+import { PeopleFilters } from './PeopleFilters';
 import { useEffect, useState } from 'react';
-import { Loader } from '../Loader';
-import { getPeople } from '../../api';
-import { Person } from '../../types/Person';
+import { Loader } from './Loader';
+import { getPeople } from '../api';
+import { Person } from '../types/Person';
 import { useParams } from 'react-router-dom';
-import { PeopleTable } from '../PeopleTable';
+import { PeopleTable } from './PeopleTable';
 import { useSearchParams } from 'react-router-dom';
 
 export const PeoplePage = () => {

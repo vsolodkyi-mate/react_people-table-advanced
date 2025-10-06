@@ -1,4 +1,4 @@
-import { PeoplePage } from './components/pages/PeoplePage';
+import { PeoplePage } from './components/PeoplePage';
 import { Navbar } from './components/Navbar';
 
 import './App.scss';
